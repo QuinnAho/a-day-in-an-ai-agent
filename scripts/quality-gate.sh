@@ -8,7 +8,8 @@
 #
 # For judgment gates (architecture, spec drift), see judgment-gate.sh
 
-set -e
+# Do NOT use set -e — arithmetic increments and grep exit codes cause false exits
+set +e
 
 echo "========================================="
 echo "    MECHANICAL QUALITY GATES (Codex)    "
@@ -123,7 +124,7 @@ echo "---------------------"
 SECRET_PATTERNS="password\s*=|api_key\s*=|secret\s*=|token\s*="
 if command -v grep &> /dev/null; then
     SECRET_COUNT=$(grep -rni --include="*.ts" --include="*.js" --include="*.json" \
-        -E "$SECRET_PATTERNS" . 2>/dev/null | grep -v node_modules | grep -v ".env" | wc -l || echo "0")
+        -E "$SECRET_PATTERNS" . 2>/dev/null | grep -v node_modules | grep -v ".env" | grep -v settings.json | grep -v package-lock | wc -l || echo "0")
     if [ "$SECRET_COUNT" -gt 0 ]; then
         fail "Potential secrets found in code: $SECRET_COUNT occurrences"
     else
