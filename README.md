@@ -72,12 +72,19 @@ project-root/
 ### Automated Setup (Recommended)
 
 ```bash
-git clone https://github.com/yourrepo/quinns-epic-ai-workflow
-cd quinns-epic-ai-workflow
+# From your project root:
+git clone https://github.com/yourrepo/quinns-epic-ai-workflow .ai-workflow
+cp -r .ai-workflow/{.claude,CLAUDE.md,AGENTS.md,STATUS.md,scripts,docs} .
+cat .ai-workflow/.gitignore >> .gitignore  # Append, don't overwrite
+rm -rf .ai-workflow
+
+# Run setup
 ./scripts/setup.sh
 ```
 
 This installs Ollama, Codex CLI, Claude Code, MCP servers, and configures everything.
+
+Then customize `CLAUDE.md` with your project's stack, conventions, and forbidden patterns.
 
 ### Manual Setup
 
