@@ -71,8 +71,10 @@ project-root/
 
 ### Automated Setup (Recommended)
 
+First copy the workflow files into your project root:
+
 ```powershell
-# From your project root, clone and copy workflow files:
+# From your project root, clone and copy workflow files
 git clone https://github.com/QuinnAho/quinns-epic-ai-workflow.git .ai-workflow
 
 # Copy core files to project root (AI agents look here)
@@ -90,12 +92,41 @@ Get-Content ".ai-workflow\.gitignore" | Add-Content ".gitignore"
 Remove-Item -Path ".ai-workflow" -Recurse -Force
 ```
 
+Then run the actual dependency/bootstrap script from the project root:
+
+```bash
+# macOS / Linux / WSL / Git Bash
+chmod +x ./scripts/setup.sh
+./scripts/setup.sh
+```
+
+`./scripts/setup.sh` is the command that installs and verifies the workflow dependencies:
+- Checks `node`, `npm`, `git`, and optional `python3`
+- Installs Ollama and pulls the Qwen models
+- Installs the OpenAI Codex CLI
+- Installs Claude Code
+- Configures Claude MCP servers
+- Makes workflow scripts executable
+- Creates `.env.example`
+
+Useful variants:
+
+```bash
+./scripts/setup.sh --skip-ollama
+./scripts/setup.sh --verify-only
+./scripts/setup.sh --help
+```
+
+If you are on Windows, run the shell script from WSL or Git Bash after copying the files with PowerShell.
+
 Then customize `CLAUDE.md` with your project's stack, conventions, and forbidden patterns.
 
 ### Manual Setup
 
 <details>
 <summary>Click to expand manual steps</summary>
+
+These are the manual equivalents of what `./scripts/setup.sh` automates.
 
 #### 1. Install Ollama & Local Models
 
