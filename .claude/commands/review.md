@@ -1,10 +1,10 @@
 ---
-description: Morning review of overnight Codex work
+description: Morning handoff review of overnight Codex work
 ---
 
-# Morning Review Workflow
+# Morning Handoff Review
 
-This command runs the full morning review workflow after an overnight Codex session.
+This command runs the full morning handoff review after an overnight Codex session.
 
 ## Step 1: Understand What Happened Overnight
 

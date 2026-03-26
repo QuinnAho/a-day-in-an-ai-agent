@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Quinn's Epic AI Workflow - Setup Script
-# Sets up the dual-agent pipeline (Codex + Claude Code + Ollama)
+# A Day in an AI Agent - Setup Script
+# Sets up the dual-agent pipeline (Codex + Claude Code + optional Ollama)
 
 set -e
 
@@ -15,7 +15,7 @@ NC='\033[0m'
 
 echo -e "${BOLD}"
 echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║       Quinn's Epic AI Workflow - Setup Script             ║"
+echo "║         A Day in an AI Agent - Setup Script               ║"
 echo "║   Dual-Agent Pipeline: Codex (Night) + Claude (Morning)   ║"
 echo "╚═══════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
@@ -97,9 +97,9 @@ check_prerequisites() {
     echo ""
 }
 
-# Install Ollama and models
+# Install optional Ollama and models
 install_ollama() {
-    echo -e "${BOLD}Step 1: Ollama + Local Models${NC}"
+    echo -e "${BOLD}Step 1: Optional Ollama + Local Models${NC}"
 
     if command -v ollama &> /dev/null; then
         echo -e "${GREEN}✓${NC} Ollama already installed"
@@ -242,9 +242,9 @@ install_ralph() {
     echo ""
 }
 
-# Install LiteLLM proxy (bridges Claude Code → Ollama)
+# Install optional LiteLLM proxy (bridges Claude Code to local Ollama)
 install_litellm() {
-    echo -e "${BOLD}Step 6: LiteLLM Proxy (Claude Code → Ollama Gateway)${NC}"
+    echo -e "${BOLD}Step 6: Optional LiteLLM Proxy (Claude Code to Ollama Gateway)${NC}"
 
     if command -v litellm &> /dev/null; then
         echo -e "${GREEN}✓${NC} LiteLLM already installed"
@@ -289,19 +289,19 @@ create_env_template() {
 
     if [ ! -f ".env" ]; then
         cat > .env.example << 'EOF'
-# Quinn's Epic AI Workflow - Environment Variables
+# A Day in an AI Agent - Environment Variables
 
 # GitHub (for MCP server)
 GITHUB_TOKEN=your_github_personal_access_token
 
-# Ollama (usually localhost)
+# Optional Ollama (usually localhost)
 OLLAMA_HOST=http://localhost:11434
 
-# LiteLLM proxy (bridges Claude Code → Ollama)
+# Optional LiteLLM proxy (bridges Claude Code to local Ollama)
 # Start with: ./scripts/start-litellm.sh
 # ANTHROPIC_BASE_URL=http://localhost:4000
 
-# Subagent model routing (via LiteLLM gateway)
+# Optional subagent model routing (via LiteLLM gateway)
 # CLAUDE_CODE_SUBAGENT_MODEL=qwen3.5:27b
 EOF
         echo -e "${GREEN}✓${NC} Created .env.example"
@@ -323,8 +323,7 @@ verify_installation() {
     if command -v ollama &> /dev/null; then
         echo -e "${GREEN}✓${NC} Ollama"
     else
-        echo -e "${RED}✗${NC} Ollama"
-        all_good=false
+        echo -e "${YELLOW}⚠${NC} Ollama (optional, not installed)"
     fi
 
     if command -v codex &> /dev/null; then
@@ -391,13 +390,13 @@ print_next_steps() {
     echo "4. Edit your first task list:"
     echo "   vim AGENTS.md"
     echo ""
-    echo "5. Start the LiteLLM gateway (for local model routing):"
-    echo "   ./scripts/start-litellm.sh --bg"
+    echo "5. Optional local crew:"
+    echo "   ./scripts/start-litellm.sh --bg   # only if you want local model routing"
     echo ""
     echo "6. Run your first overnight session:"
     echo "   ./scripts/overnight-codex.sh"
     echo ""
-    echo "7. Morning review:"
+    echo "7. Morning handoff review:"
     echo "   claude"
     echo "   /review"
     echo ""
@@ -423,7 +422,7 @@ main() {
 
 # Run with option to skip steps
 case "${1:-}" in
-    --skip-ollama)
+    --skip-ollama|--cloud-only)
         check_prerequisites
         install_codex
         install_claude
@@ -442,7 +441,8 @@ case "${1:-}" in
         echo ""
         echo "Options:"
         echo "  (none)         Full setup"
-        echo "  --skip-ollama  Skip Ollama installation"
+        echo "  --cloud-only   Skip local-model setup (Ollama/Qwen/LiteLLM)"
+        echo "  --skip-ollama  Alias for --cloud-only"
         echo "  --verify-only  Just verify installation"
         echo "  --help         Show this help"
         ;;

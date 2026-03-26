@@ -1,6 +1,6 @@
-# STATUS.md - Handoff State
+# Morning Handoff
 
-This file is updated by Codex after each task and read by Claude each morning. It provides continuity between the overnight implementation and morning review sessions.
+`STATUS.md` is the morning handoff. Codex updates it after each task, and Claude reads it at the start of the day shift to recover context, review overnight work, and decide what happens next.
 
 ---
 

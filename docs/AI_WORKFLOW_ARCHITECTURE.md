@@ -1,12 +1,18 @@
-# Building a semi-autonomous AI coding pipeline in 2026
+# A Day in an AI Agent
+
+*Building a dual-agent semi-autonomous AI coding pipeline in 2026*
+
+Set the agenda in the evening. Let Codex work the night shift. Review the morning handoff with Claude. Use the day for the work that needs judgment.
+
+The local crew is optional. If you do not want to run Ollama or Qwen at all, the workflow still works with just Codex and Claude Code.
 
 **A dual-agent system using OpenAI Codex for overnight autonomous implementation and Claude Code for morning architecture review is the strongest architecture available today — and you can set it up in an afternoon.** The ecosystem has matured dramatically: Codex excels at sustained spec-following over long sessions (OpenAI demonstrated 25-hour continuous runs), while Claude Code brings superior architectural judgment for review and complex reasoning. Combined with Qwen 3.5 27B running locally via Ollama for grunt work, this stack delivers spec-driven, test-validated code while you sleep — then gets intelligent review when you wake up. A student on Windows/WSL with a 24GB GPU can run this system for **~$40/month** ($20 ChatGPT Plus + $20 Claude Pro, plus $100 student Codex credits), producing production-quality code overnight.
 
 ---
 
-## The recommended architecture at a glance
+## The daily rhythm at a glance
 
-The system follows a **dual-agent orchestration pattern** where OpenAI Codex handles sustained overnight autonomous implementation while Claude Code handles morning review, architecture, and complex reasoning. Local Qwen models handle routine grunt work for both agents. Two categories of quality gates enforce standards: **mechanical gates** (Codex-enforced during overnight runs) and **judgment gates** (Claude-enforced during morning review).
+The system follows a **dual-agent orchestration pattern** where OpenAI Codex handles sustained overnight autonomous implementation while Claude Code handles morning review, architecture, and complex reasoning. Optional local Qwen models can handle routine grunt work for both agents, but they are not required. Two categories of quality gates enforce standards: **mechanical gates** (Codex-enforced during overnight runs) and **judgment gates** (Claude-enforced during morning review).
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -281,7 +287,9 @@ For cost efficiency, run the linter, test runner, and simplification agents on *
 
 **Prerequisites**: Windows with WSL2, NVIDIA GPU (24GB recommended — RTX 3090 at ~$750 used is the value sweet spot), 32GB system RAM, Node.js 18+, Python 3.10+, Git. Student email for Codex credits.
 
-**Step 1: Install and configure Ollama in WSL2** (15 minutes)
+If you want the simplest cloud-only path, skip Step 1 and Step 4. The rest of the workflow still applies.
+
+**Step 1: Optional - Install and configure Ollama in WSL2** (15 minutes)
 ```bash
 # In WSL2
 curl -fsSL https://ollama.com/install.sh | sh
@@ -305,12 +313,20 @@ npm install -g @anthropic-ai/claude-code
 claude  # Follow auth flow with Claude Pro account
 ```
 
-**Step 4: Configure local model routing for Claude** (10 minutes)
-Add to `~/.claude/settings.json`:
+**Step 4: Optional - Configure local model routing for Claude** (10 minutes)
+Base `~/.claude/settings.json`:
 ```json
 {
   "env": {
-    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0"
+  }
+}
+```
+
+If you want Claude subagents to use the local crew later, add:
+```json
+{
+  "env": {
     "CLAUDE_CODE_SUBAGENT_MODEL": "qwen3.5:27b"
   }
 }
@@ -366,7 +382,7 @@ claude
 | ChatGPT Plus (includes Codex access) | $20 |
 | Claude Pro (for Claude Code) | $20 |
 | Codex student credits (one-time $100) | ~$0/month amortized |
-| Ollama + local models | $0 (electricity only) |
+| Optional Ollama + local models | $0 (electricity only) |
 | GitHub (free for students) | $0 |
 | Context7, MCP servers | $0 |
 | **Total** | **~$40/month** |
@@ -380,7 +396,7 @@ claude
 **Cost optimization strategies:**
 1. **Codex for overnight grunt work**: Uses student credits, not subscription
 2. **GPT-5.4-mini for simple Codex tasks**: Drop from full model for test generation, linting, simple edits to preserve rate limits
-3. **Local Qwen models handle 70-80%**: Both Codex and Claude can route to Ollama
+3. **Optional local Qwen models can handle 70-80%**: Add Ollama only if you want a cheaper local grunt-work layer
 4. **Reserve Opus for architecture only**: Use Sonnet for Claude's subagent work
 5. **Prompt caching on Claude**: 90% reduction on cached input tokens
 
@@ -390,14 +406,14 @@ When student credits run out, the $20 ChatGPT Plus subscription still includes C
 
 ## Conclusion
 
-The autonomous coding pipeline is no longer theoretical. Every component exists as a cloneable repo or installable tool. **Codex (overnight) + Claude Code (morning) + Ollama/Qwen (grunt work) + spec-driven development** is the stack that maximizes capability while minimizing cost. The dual-agent architecture plays to each system's strengths: Codex's sustained spec-following for implementation grind, Claude's superior reasoning for review and architecture.
+The autonomous coding pipeline is no longer theoretical. Every component exists as a cloneable repo or installable tool. **Codex (overnight) + Claude Code (morning) + spec-driven development** is the core stack. Add Ollama/Qwen when you want a local grunt-work layer and lower marginal cost. The dual-agent architecture plays to each system's strengths: Codex's sustained spec-following for implementation grind, Claude's superior reasoning for review and architecture.
 
 The critical success factors are not technical — they're methodological:
 1. **Write good specs**: AGENTS.md must be unambiguous for Codex to follow overnight
 2. **Enforce quality gates**: Mechanical gates (Codex) + Judgment gates (Claude)
 3. **Use mutation testing**: Validate AI-generated test quality
-4. **Morning review is mandatory**: Claude catches what Codex missed
+4. **Morning handoff review is mandatory**: Claude catches what Codex missed
 
-For a student developer, this architecture costs ~$40/month and produces professional-quality code. The overnight Codex loop handles volume; the morning Claude session ensures quality. Local Qwen models eliminate 70-80% of what would otherwise be API costs.
+For a student developer, the Codex + Claude version of this architecture already produces professional-quality code. The overnight Codex loop handles volume; the morning Claude session ensures quality. If you add local Qwen models, they can eliminate 70-80% of what would otherwise be API costs.
 
 Start with the overnight Codex script (`./scripts/overnight-codex.sh`), configure Claude Code for morning review, and write your first spec. The compounding effect of autonomous overnight implementation + intelligent morning review will transform your development velocity within a week.

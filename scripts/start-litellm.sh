@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Start LiteLLM proxy to bridge Claude Code → Ollama local models
-# This enables Claude Code to route subagent work to local Qwen models
+# Optional: start a LiteLLM proxy to bridge Claude Code → Ollama local models
+# This enables Claude Code to route subagent work to local Qwen models when you want the local crew
 #
 # Prerequisites:
 #   pip install litellm[proxy]

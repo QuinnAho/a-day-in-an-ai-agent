@@ -1,10 +1,6 @@
 {
   "env": {
-    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0",
-    "CLAUDE_CODE_SUBAGENT_MODEL": "qwen3.5:27b",
-    "ANTHROPIC_CUSTOM_MODEL_OPTION": "qwen3.5:27b",
-    "ANTHROPIC_CUSTOM_MODEL_OPTION_NAME": "Qwen 3.5 27B (Local)",
-    "ANTHROPIC_CUSTOM_MODEL_OPTION_DESCRIPTION": "Local Qwen model via LiteLLM+Ollama"
+    "CLAUDE_CODE_ATTRIBUTION_HEADER": "0"
   },
   "hooks": {
     "PostToolUse": [
