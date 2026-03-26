@@ -183,6 +183,77 @@ claude mcp add desktop-commander -- npx -y @anthropic-ai/mcp-desktop-commander
 
 </details>
 
+## Starting From a Project Document
+
+If you have a product brief, PRD, notes file, or brainstorming doc, start with **Claude**, not Codex.
+
+Codex works best when `AGENTS.md` already contains small, testable tasks linked to concrete spec files. Claude is the better tool for turning a high-level document into:
+- A project-specific `CLAUDE.md`
+- One or more feature specs in `.claude/specs/`
+- A first-pass task list in `AGENTS.md`
+
+### Recommended Flow
+
+1. Put your idea document somewhere in the repo, for example `docs/idea.md`
+2. Start `claude`
+3. Ask Claude to convert the document into specs before any implementation
+4. Run `/analyze-spec <spec>` on each drafted spec
+5. Update `AGENTS.md` with only the first 1-3 thin, executable tasks
+6. Run `./scripts/overnight-codex.sh`
+
+### Prompting Claude the Right Way
+
+Prefer asking Claude to work on a specific artifact and phase instead of saying "build the whole app."
+
+Good prompt:
+
+```text
+Read docs/idea.md.
+Create a project-specific CLAUDE.md and 2-3 feature specs in .claude/specs/ using the template.
+Break the work into thin vertical slices with explicit acceptance criteria.
+Do not implement code yet.
+```
+
+Then analyze a spec:
+
+```text
+/analyze-spec .claude/specs/feature-1.md
+```
+
+Then, after the spec is solid, either:
+- Use `/implement .claude/specs/feature-1.md` in Claude for an interactive implementation pass
+- Or add the task to `AGENTS.md` and let Codex handle it overnight
+
+### How Subagents Get Used
+
+You usually should **not** ask for named subagents manually.
+
+This repo already maps Claude slash commands to the appropriate workflow:
+- `/analyze-spec <spec>` uses the spec analysis workflow
+- `/implement <spec>` runs the full analyst -> architect -> tester -> developer -> reviewer -> validator pipeline
+- `/validate <spec>` runs final validation against the spec
+
+In practice, the best prompt pattern is:
+- Name the file path
+- Name the phase
+- State the constraints
+- State what not to do yet
+
+Bad prompt:
+
+```text
+Build my app from this document.
+```
+
+Better prompt:
+
+```text
+Read docs/idea.md and draft .claude/specs/auth-bootstrap.md.
+Focus on the smallest shippable slice.
+Include acceptance criteria, edge cases, and out-of-scope.
+Do not write code yet.
+```
+
 ## Daily Workflow
 
 ### Evening (15 min)
