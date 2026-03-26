@@ -71,18 +71,24 @@ project-root/
 
 ### Automated Setup (Recommended)
 
-```bash
-# From your project root:
+```powershell
+# From your project root, clone and copy workflow files:
 git clone https://github.com/yourrepo/quinns-epic-ai-workflow .ai-workflow
-cp -r .ai-workflow/{.claude,CLAUDE.md,AGENTS.md,STATUS.md,scripts,docs} .
-cat .ai-workflow/.gitignore >> .gitignore  # Append, don't overwrite
-rm -rf .ai-workflow
 
-# Run setup
-./scripts/setup.sh
+# Copy core files to project root (AI agents look here)
+Copy-Item -Path ".ai-workflow\.claude" -Destination ".\" -Recurse
+Copy-Item -Path ".ai-workflow\CLAUDE.md" -Destination ".\"
+Copy-Item -Path ".ai-workflow\AGENTS.md" -Destination ".\"
+Copy-Item -Path ".ai-workflow\STATUS.md" -Destination ".\"
+Copy-Item -Path ".ai-workflow\scripts" -Destination ".\" -Recurse
+Copy-Item -Path ".ai-workflow\docs" -Destination ".\" -Recurse
+
+# Append to .gitignore (don't overwrite existing)
+Get-Content ".ai-workflow\.gitignore" | Add-Content ".gitignore"
+
+# Clean up
+Remove-Item -Path ".ai-workflow" -Recurse -Force
 ```
-
-This installs Ollama, Codex CLI, Claude Code, MCP servers, and configures everything.
 
 Then customize `CLAUDE.md` with your project's stack, conventions, and forbidden patterns.
 
@@ -91,17 +97,21 @@ Then customize `CLAUDE.md` with your project's stack, conventions, and forbidden
 <details>
 <summary>Click to expand manual steps</summary>
 
-#### 1. Install Ollama & Local Models (WSL2)
+#### 1. Install Ollama & Local Models
 
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
+```powershell
+# Install Ollama (download from https://ollama.com/download/windows)
+# Or via winget:
+winget install Ollama.Ollama
+
+# Pull models
 ollama pull qwen2.5-coder:32b    # Autocomplete
 ollama pull qwen3.5:27b           # Implementation
 ```
 
 #### 2. Install OpenAI Codex CLI
 
-```bash
+```powershell
 npm install -g @openai/codex
 codex auth  # Use ChatGPT Plus account
 # If student: codex credits  # Verify $100 credits
@@ -109,21 +119,29 @@ codex auth  # Use ChatGPT Plus account
 
 #### 3. Install Claude Code
 
-```bash
+```powershell
 npm install -g @anthropic-ai/claude-code
 claude  # Use Claude Pro account
 ```
 
 #### 4. Copy This Template
 
-```bash
+```powershell
 git clone https://github.com/yourrepo/quinns-epic-ai-workflow .workflow
-cp -r .workflow/{.claude,CLAUDE.md,AGENTS.md,STATUS.md,scripts} .
+
+# Copy to project root
+Copy-Item -Path ".workflow\.claude" -Destination ".\" -Recurse
+Copy-Item -Path ".workflow\CLAUDE.md" -Destination ".\"
+Copy-Item -Path ".workflow\AGENTS.md" -Destination ".\"
+Copy-Item -Path ".workflow\STATUS.md" -Destination ".\"
+Copy-Item -Path ".workflow\scripts" -Destination ".\" -Recurse
+
+Remove-Item -Path ".workflow" -Recurse -Force
 ```
 
 #### 5. Configure MCP Servers
 
-```bash
+```powershell
 claude mcp add context7 -- npx -y @upstash/context7-mcp@latest
 claude mcp add github -- npx -y @modelcontextprotocol/server-github
 claude mcp add memory -- npx -y @modelcontextprotocol/server-memory
