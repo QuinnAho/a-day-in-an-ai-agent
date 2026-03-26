@@ -127,7 +127,7 @@ claude  # Use Claude Pro account
 #### 4. Copy This Template
 
 ```powershell
-git clone https://github.com/yourrepo/quinns-epic-ai-workflow .workflow
+git clone https://github.com/QuinnAho/quinns-epic-ai-workflow.git .workflow
 
 # Copy to project root
 Copy-Item -Path ".workflow\.claude" -Destination ".\" -Recurse
