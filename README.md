@@ -1,6 +1,6 @@
 # A Day in an AI Agent
 
-*A dual-agent semi-autonomous AI coding pipeline*
+*A dual-agent semi-autonomous AI coding pipeline: Codex is dumb sometimes but has a high token limit, Claude is smarter but has a low token limit, lets take advantage of both worlds.*
 
 ## Welcome to the Factory
 
