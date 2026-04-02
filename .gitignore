@@ -1,7 +1,5 @@
 # Logs
 .codex-logs/
-.claude-logs/
-.ralph/
 
 # Environment
 .env

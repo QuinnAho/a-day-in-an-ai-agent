@@ -56,13 +56,25 @@ fi
 echo ""
 echo "Gate 2: Tests"
 echo "-------------"
+SANDBOX_TEST_STATUS=10
+if command -v node &> /dev/null && [ -f "scripts/run-game-tests.mjs" ]; then
+    node scripts/run-game-tests.mjs
+    SANDBOX_TEST_STATUS=$?
+fi
+
+if [ "$SANDBOX_TEST_STATUS" -eq 0 ]; then
+    pass "Sandbox game tests passed"
+elif [ "$SANDBOX_TEST_STATUS" -ne 10 ]; then
+    fail "Sandbox game tests failed"
+fi
+
 if command -v npm &> /dev/null && [ -f "package.json" ]; then
     if npm test --if-present 2>/dev/null; then
-        pass "Tests passed"
+        pass "npm tests passed"
     else
-        fail "Tests failed"
+        fail "npm tests failed"
     fi
-else
+elif [ "$SANDBOX_TEST_STATUS" -eq 10 ]; then
     warn "No npm project found, skipping tests"
 fi
 
@@ -106,8 +118,21 @@ echo "Gate 5: Debug Code Check"
 echo "------------------------"
 DEBUG_PATTERNS="console\.log|debugger|TODO:|FIXME:|HACK:"
 if command -v grep &> /dev/null; then
-    DEBUG_COUNT=$(grep -rn --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" \
-        -E "$DEBUG_PATTERNS" src/ 2>/dev/null | wc -l || echo "0")
+    DEBUG_TARGETS=()
+    if [ -d "src" ]; then
+        DEBUG_TARGETS+=("src")
+    fi
+    if [ -d "sandbox" ]; then
+        DEBUG_TARGETS+=("sandbox")
+    fi
+
+    if [ ${#DEBUG_TARGETS[@]} -gt 0 ]; then
+        DEBUG_COUNT=$(grep -rn --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" --include="*.html" \
+            -E "$DEBUG_PATTERNS" "${DEBUG_TARGETS[@]}" 2>/dev/null | wc -l || echo "0")
+    else
+        DEBUG_COUNT=0
+    fi
+
     if [ "$DEBUG_COUNT" -gt 0 ]; then
         warn "Found $DEBUG_COUNT lines with debug code/TODOs"
     else

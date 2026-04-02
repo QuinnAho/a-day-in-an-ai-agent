@@ -4,10 +4,13 @@
 Write-Host "Copying workflow files to project root..." -ForegroundColor Green
 
 # Copy core files
-Copy-Item -Path ".claude" -Destination ".." -Recurse -Force
-Copy-Item -Path "CLAUDE.md" -Destination ".." -Force
+Copy-Item -Path ".codex" -Destination ".." -Recurse -Force
+Copy-Item -Path ".agents" -Destination ".." -Recurse -Force
+Copy-Item -Path "PROJECT.md" -Destination ".." -Force
 Copy-Item -Path "AGENTS.md" -Destination ".." -Force
 Copy-Item -Path "STATUS.md" -Destination ".." -Force
+Copy-Item -Path "specs" -Destination ".." -Recurse -Force
+Copy-Item -Path "sandbox" -Destination ".." -Recurse -Force
 Copy-Item -Path "scripts" -Destination ".." -Recurse -Force
 
 # Copy docs if they exist
@@ -27,4 +30,4 @@ Write-Host "Workflow files copied successfully!" -ForegroundColor Green
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "1. cd .." -ForegroundColor White
 Write-Host "2. Remove-Item -Path '.ai-workflow' -Recurse -Force" -ForegroundColor White
-Write-Host "3. ./scripts/setup.sh --cloud-only" -ForegroundColor White
+Write-Host "3. ./scripts/setup.sh" -ForegroundColor White

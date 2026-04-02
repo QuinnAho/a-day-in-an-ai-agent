@@ -1,11 +1,14 @@
 #!/bin/bash
 
-# A Day in an AI Agent - Setup Script
-# Sets up the dual-agent pipeline (Codex + Claude Code + optional Ollama)
+# AI Game Gen Workflow - Setup Script
+# Sets up the Codex-first autonomous web-game workflow.
 
 set -e
 
-# Colors
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+CODEX_LAUNCHER=(node "$PROJECT_ROOT/scripts/codex-cli.mjs")
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -14,13 +17,12 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 echo -e "${BOLD}"
-echo "╔═══════════════════════════════════════════════════════════╗"
-echo "║         A Day in an AI Agent - Setup Script               ║"
-echo "║   Dual-Agent Pipeline: Codex (Night) + Claude (Morning)   ║"
-echo "╚═══════════════════════════════════════════════════════════╝"
+echo "============================================================"
+echo "           AI Game Gen Workflow - Setup Script"
+echo "        Codex-First Autonomous Web Game Workflow"
+echo "============================================================"
 echo -e "${NC}"
 
-# Detect environment
 detect_environment() {
     if grep -qi microsoft /proc/version 2>/dev/null; then
         echo "wsl"
@@ -37,7 +39,6 @@ ENV=$(detect_environment)
 echo -e "${BLUE}Detected environment: ${ENV}${NC}"
 echo ""
 
-# Check prerequisites
 check_prerequisites() {
     echo -e "${BOLD}Checking prerequisites...${NC}"
 
@@ -50,36 +51,35 @@ check_prerequisites() {
         if [ "$NODE_VERSION" -lt 18 ]; then
             missing+=("Node.js 18+ (current: $(node -v))")
         else
-            echo -e "${GREEN}✓${NC} Node.js $(node -v)"
+            echo -e "${GREEN}[OK]${NC} Node.js $(node -v)"
         fi
     fi
 
     if ! command -v npm &> /dev/null; then
         missing+=("npm")
     else
-        echo -e "${GREEN}✓${NC} npm $(npm -v)"
+        echo -e "${GREEN}[OK]${NC} npm $(npm -v)"
     fi
 
     if ! command -v git &> /dev/null; then
         missing+=("git")
     else
-        echo -e "${GREEN}✓${NC} git $(git --version | cut -d' ' -f3)"
+        echo -e "${GREEN}[OK]${NC} git $(git --version | cut -d' ' -f3)"
     fi
 
     if ! command -v python3 &> /dev/null; then
-        echo -e "${YELLOW}⚠${NC} Python 3.10+ (optional, for some tools)"
+        echo -e "${YELLOW}[WARN]${NC} Python 3.10+ (optional)"
     else
-        echo -e "${GREEN}✓${NC} Python $(python3 --version | cut -d' ' -f2)"
+        echo -e "${GREEN}[OK]${NC} Python $(python3 --version | cut -d' ' -f2)"
     fi
 
-    # Check for NVIDIA GPU (WSL/Linux)
     if [[ "$ENV" == "wsl" || "$ENV" == "linux" ]]; then
         if command -v nvidia-smi &> /dev/null; then
             GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)
             GPU_MEM=$(nvidia-smi --query-gpu=memory.total --format=csv,noheader 2>/dev/null | head -1)
-            echo -e "${GREEN}✓${NC} GPU: $GPU_NAME ($GPU_MEM)"
+            echo -e "${GREEN}[OK]${NC} GPU: $GPU_NAME ($GPU_MEM)"
         else
-            echo -e "${YELLOW}⚠${NC} No NVIDIA GPU detected (local models will be slower)"
+            echo -e "${YELLOW}[WARN]${NC} No NVIDIA GPU detected"
         fi
     fi
 
@@ -87,352 +87,164 @@ check_prerequisites() {
         echo ""
         echo -e "${RED}Missing prerequisites:${NC}"
         for item in "${missing[@]}"; do
-            echo -e "  ${RED}✗${NC} $item"
+            echo -e "  ${RED}[ERR]${NC} $item"
         done
         echo ""
-        echo "Please install missing prerequisites and run this script again."
+        echo "Install the missing prerequisites and run this script again."
         exit 1
     fi
 
     echo ""
 }
 
-# Install optional Ollama and models
-install_ollama() {
-    echo -e "${BOLD}Step 1: Optional Ollama + Local Models${NC}"
-
-    if command -v ollama &> /dev/null; then
-        echo -e "${GREEN}✓${NC} Ollama already installed"
-    else
-        echo -e "${BLUE}Installing Ollama...${NC}"
-        curl -fsSL https://ollama.com/install.sh | sh
-        echo -e "${GREEN}✓${NC} Ollama installed"
-    fi
-
-    # Start Ollama service if not running
-    if ! pgrep -x "ollama" > /dev/null; then
-        echo -e "${BLUE}Starting Ollama service...${NC}"
-        ollama serve &> /dev/null &
-        sleep 3
-    fi
-
-    # Pull models
-    echo -e "${BLUE}Pulling Qwen models (this may take a while)...${NC}"
-
-    echo "  Pulling qwen2.5-coder:32b..."
-    if ollama pull qwen2.5-coder:32b 2>&1 | tail -1; then
-        echo -e "  ${GREEN}✓${NC} qwen2.5-coder:32b"
-    else
-        echo -e "  ${YELLOW}⚠${NC} qwen2.5-coder:32b (may need more VRAM, try 7b variant)"
-    fi
-
-    echo "  Pulling qwen3.5:27b..."
-    if ollama pull qwen3.5:27b 2>&1 | tail -1; then
-        echo -e "  ${GREEN}✓${NC} qwen3.5:27b"
-    else
-        echo -e "  ${YELLOW}⚠${NC} qwen3.5:27b (may need more VRAM)"
-    fi
-
-    echo ""
-}
-
-# Install Codex CLI
 install_codex() {
-    echo -e "${BOLD}Step 2: OpenAI Codex CLI${NC}"
+    echo -e "${BOLD}Step 1: OpenAI Codex CLI${NC}"
 
-    if command -v codex &> /dev/null; then
-        echo -e "${GREEN}✓${NC} Codex CLI already installed"
+    if "${CODEX_LAUNCHER[@]}" --version &> /dev/null; then
+        echo -e "${GREEN}[OK]${NC} Codex CLI already installed"
     else
         echo -e "${BLUE}Installing Codex CLI...${NC}"
         npm install -g @openai/codex
-        echo -e "${GREEN}✓${NC} Codex CLI installed"
+        echo -e "${GREEN}[OK]${NC} Codex CLI installed"
     fi
 
-    # Check auth
-    if codex auth status &> /dev/null; then
-        echo -e "${GREEN}✓${NC} Codex authenticated"
+    if "${CODEX_LAUNCHER[@]}" login status &> /dev/null; then
+        echo -e "${GREEN}[OK]${NC} Codex authenticated"
     else
         echo -e "${YELLOW}!${NC} Codex needs authentication"
-        echo "  Run: codex auth"
-        echo "  (Requires ChatGPT Plus subscription)"
+        echo "  Run: node ./scripts/codex-cli.mjs login"
     fi
 
     echo ""
 }
 
-# Install Claude Code
-install_claude() {
-    echo -e "${BOLD}Step 3: Claude Code CLI${NC}"
-
-    if command -v claude &> /dev/null; then
-        echo -e "${GREEN}✓${NC} Claude Code already installed"
-    else
-        echo -e "${BLUE}Installing Claude Code...${NC}"
-        npm install -g @anthropic-ai/claude-code
-        echo -e "${GREEN}✓${NC} Claude Code installed"
-    fi
-
-    # Check if authenticated (basic check)
-    if [ -f "$HOME/.claude/credentials.json" ] || [ -f "$HOME/.config/claude/credentials.json" ]; then
-        echo -e "${GREEN}✓${NC} Claude Code credentials found"
-    else
-        echo -e "${YELLOW}!${NC} Claude Code needs authentication"
-        echo "  Run: claude"
-        echo "  (Requires Claude Pro subscription)"
-    fi
-
-    echo ""
-}
-
-# Configure MCP servers
-configure_mcp() {
-    echo -e "${BOLD}Step 4: MCP Servers${NC}"
-
-    echo -e "${BLUE}Adding MCP servers to Claude Code...${NC}"
-
-    # These commands are idempotent - safe to run multiple times
-    claude mcp add context7 -- npx -y @upstash/context7-mcp@latest 2>/dev/null || true
-    echo -e "  ${GREEN}✓${NC} context7 (library docs)"
-
-    claude mcp add memory -- npx -y @modelcontextprotocol/server-memory 2>/dev/null || true
-    echo -e "  ${GREEN}✓${NC} memory (cross-session)"
-
-    claude mcp add eslint -- npx -y @eslint/mcp 2>/dev/null || true
-    echo -e "  ${GREEN}✓${NC} eslint"
-
-    # GitHub MCP needs token
-    if [ -n "$GITHUB_TOKEN" ]; then
-        claude mcp add github -- npx -y @modelcontextprotocol/server-github 2>/dev/null || true
-        echo -e "  ${GREEN}✓${NC} github"
-    else
-        echo -e "  ${YELLOW}⚠${NC} github (set GITHUB_TOKEN to enable)"
-    fi
-
-    claude mcp add playwright -- npx -y @anthropic-ai/mcp-playwright 2>/dev/null || true
-    echo -e "  ${GREEN}✓${NC} playwright (UI testing)"
-
-    claude mcp add desktop-commander -- npx -y @anthropic-ai/mcp-desktop-commander 2>/dev/null || true
-    echo -e "  ${GREEN}✓${NC} desktop-commander"
-
-    echo ""
-}
-
-# Install RALPH plugin
-install_ralph() {
-    echo -e "${BOLD}Step 5: RALPH Plugin (for interactive Claude sessions)${NC}"
-
-    # Check if RALPH config exists in Claude settings
-    CLAUDE_SETTINGS="$HOME/.claude/settings.json"
-    if [ -f "$CLAUDE_SETTINGS" ] && grep -q "ralph" "$CLAUDE_SETTINGS" 2>/dev/null; then
-        echo -e "${GREEN}✓${NC} RALPH appears to be configured"
-    else
-        echo -e "${YELLOW}!${NC} RALPH plugin requires manual installation from Claude Code"
-        echo ""
-        echo "  After setup completes, run:"
-        echo "    claude"
-        echo "    /plugin marketplace add anthropics/ralph-wiggum"
-        echo ""
-        echo "  Or use the community version with more safety rails:"
-        echo "    git clone https://github.com/frankbria/ralph-claude-code ~/.ralph"
-        echo ""
-        echo "  RALPH is used for interactive Claude sessions (daytime work)."
-        echo "  Overnight automation uses Codex, not RALPH."
-    fi
-
-    echo ""
-}
-
-# Install optional LiteLLM proxy (bridges Claude Code to local Ollama)
-install_litellm() {
-    echo -e "${BOLD}Step 6: Optional LiteLLM Proxy (Claude Code to Ollama Gateway)${NC}"
-
-    if command -v litellm &> /dev/null; then
-        echo -e "${GREEN}✓${NC} LiteLLM already installed"
-    else
-        echo -e "${BLUE}Installing LiteLLM proxy...${NC}"
-        if command -v pip3 &> /dev/null; then
-            pip3 install 'litellm[proxy]' --quiet
-            echo -e "${GREEN}✓${NC} LiteLLM installed"
-        elif command -v pip &> /dev/null; then
-            pip install 'litellm[proxy]' --quiet
-            echo -e "${GREEN}✓${NC} LiteLLM installed"
-        else
-            echo -e "${YELLOW}⚠${NC} pip not found - install LiteLLM manually: pip install litellm[proxy]"
-        fi
-    fi
-
-    if [ -f "litellm-config.yaml" ]; then
-        echo -e "${GREEN}✓${NC} litellm-config.yaml found"
-    else
-        echo -e "${YELLOW}⚠${NC} litellm-config.yaml missing - copy from template repo"
-    fi
-
-    echo ""
-    echo "  To start the gateway:  ./scripts/start-litellm.sh"
-    echo "  To run in background:  ./scripts/start-litellm.sh --bg"
-    echo ""
-}
-
-# Make scripts executable
 setup_scripts() {
-    echo -e "${BOLD}Step 7: Script Permissions${NC}"
+    echo -e "${BOLD}Step 2: Script Permissions${NC}"
 
     chmod +x scripts/*.sh 2>/dev/null || true
-    echo -e "${GREEN}✓${NC} Made scripts executable"
-
+    mkdir -p sandbox
+    echo -e "${GREEN}[OK]${NC} Made scripts executable"
+    echo -e "${GREEN}[OK]${NC} Ensured sandbox workspace exists"
     echo ""
 }
 
-# Create .env template
 create_env_template() {
-    echo -e "${BOLD}Step 8: Environment Template${NC}"
+    echo -e "${BOLD}Step 3: Environment Template${NC}"
 
-    if [ ! -f ".env" ]; then
+    if [ ! -f ".env.example" ]; then
         cat > .env.example << 'EOF'
-# A Day in an AI Agent - Environment Variables
+# AI Game Gen Workflow - Environment Variables
 
-# GitHub (for MCP server)
+# Optional GitHub token for publishing or repo automation
 GITHUB_TOKEN=your_github_personal_access_token
 
-# Optional Ollama (usually localhost)
-OLLAMA_HOST=http://localhost:11434
-
-# Optional LiteLLM proxy (bridges Claude Code to local Ollama)
-# Start with: ./scripts/start-litellm.sh
-# ANTHROPIC_BASE_URL=http://localhost:4000
-
-# Optional subagent model routing (via LiteLLM gateway)
-# CLAUDE_CODE_SUBAGENT_MODEL=qwen3.5:27b
+# Optional: document the current browser entry file for local scripts
+GAME_SANDBOX_DIR=sandbox
+GAME_ENTRY_FILE=sandbox/example-game/index.html
 EOF
-        echo -e "${GREEN}✓${NC} Created .env.example"
-        echo "  Copy to .env and fill in your tokens"
+        echo -e "${GREEN}[OK]${NC} Created .env.example"
     else
-        echo -e "${GREEN}✓${NC} .env already exists"
+        echo -e "${GREEN}[OK]${NC} .env.example already exists"
     fi
 
     echo ""
 }
 
-# Verify installation
 verify_installation() {
     echo -e "${BOLD}Verification${NC}"
-    echo "─────────────"
+    echo "------------"
 
     local all_good=true
 
-    if command -v ollama &> /dev/null; then
-        echo -e "${GREEN}✓${NC} Ollama"
+    if "${CODEX_LAUNCHER[@]}" --version &> /dev/null; then
+        echo -e "${GREEN}[OK]${NC} Codex CLI"
     else
-        echo -e "${YELLOW}⚠${NC} Ollama (optional, not installed)"
-    fi
-
-    if command -v codex &> /dev/null; then
-        echo -e "${GREEN}✓${NC} Codex CLI"
-    else
-        echo -e "${RED}✗${NC} Codex CLI"
+        echo -e "${RED}[ERR]${NC} Codex CLI"
         all_good=false
     fi
 
-    if command -v claude &> /dev/null; then
-        echo -e "${GREEN}✓${NC} Claude Code"
+    if [ -f "AGENTS.md" ] && [ -f "STATUS.md" ] && [ -f "PROJECT.md" ]; then
+        echo -e "${GREEN}[OK]${NC} Core workflow files"
     else
-        echo -e "${RED}✗${NC} Claude Code"
+        echo -e "${RED}[ERR]${NC} Core workflow files"
         all_good=false
     fi
 
-    if [ -f "AGENTS.md" ] && [ -f "STATUS.md" ] && [ -f "CLAUDE.md" ]; then
-        echo -e "${GREEN}✓${NC} Workflow files"
+    if [ -d "sandbox" ]; then
+        echo -e "${GREEN}[OK]${NC} Sandbox workspace"
     else
-        echo -e "${RED}✗${NC} Workflow files"
+        echo -e "${RED}[ERR]${NC} Sandbox workspace"
         all_good=false
     fi
 
-    if [ -x "scripts/overnight-codex.sh" ]; then
-        echo -e "${GREEN}✓${NC} Overnight script"
+    if [ -x "scripts/codex-coding-time.sh" ]; then
+        echo -e "${GREEN}[OK]${NC} Overnight runner"
     else
-        echo -e "${RED}✗${NC} Overnight script"
+        echo -e "${RED}[ERR]${NC} Overnight runner"
         all_good=false
     fi
 
-    if command -v litellm &> /dev/null; then
-        echo -e "${GREEN}✓${NC} LiteLLM proxy"
+    if [ -x "scripts/quality-gate.sh" ]; then
+        echo -e "${GREEN}[OK]${NC} Quality gate"
     else
-        echo -e "${YELLOW}⚠${NC} LiteLLM proxy (optional, for local model routing)"
+        echo -e "${RED}[ERR]${NC} Quality gate"
+        all_good=false
     fi
 
     echo ""
 
     if $all_good; then
-        echo -e "${GREEN}${BOLD}Setup complete!${NC}"
+        echo -e "${GREEN}${BOLD}Setup complete.${NC}"
     else
-        echo -e "${YELLOW}${BOLD}Setup partially complete - see above for issues${NC}"
+        echo -e "${YELLOW}${BOLD}Setup partially complete - see above for issues.${NC}"
     fi
 }
 
-# Print next steps
 print_next_steps() {
     echo ""
     echo -e "${BOLD}Next Steps${NC}"
-    echo "──────────"
+    echo "----------"
     echo ""
-    echo "1. Authenticate (if not already done):"
-    echo "   codex auth      # ChatGPT Plus account"
-    echo "   claude          # Claude Pro account"
+    echo "1. Authenticate Codex if needed:"
+    echo "   node ./scripts/codex-cli.mjs login"
     echo ""
-    echo "2. Install RALPH plugin (for interactive Claude sessions):"
-    echo "   claude"
-    echo "   /plugin marketplace add anthropics/ralph-wiggum"
-    echo "   # Or run /setup-ralph for guidance"
+    echo "2. Start a new game brief:"
+    echo "   ./scripts/generate-game.sh"
     echo ""
-    echo "3. Verify student credits (optional):"
-    echo "   codex credits"
+    echo "3. Generate a spec from a game idea:"
+    echo "   # The guided prompt collects the brief and writes sandbox/<game-slug>/idea.txt"
+    echo "   # Guided terminal prompt mode"
+    echo "   # Or pass the idea directly: ./scripts/generate-game.sh \"A browser game idea\""
+    echo "   # This creates sandbox/<game-slug>/ and saves the original brief there"
     echo ""
-    echo "4. Edit your first task list:"
-    echo "   vim AGENTS.md"
+    echo "4. Update the task queue:"
+    echo "   AGENTS.md"
     echo ""
-    echo "5. Optional local crew:"
-    echo "   ./scripts/start-litellm.sh --bg   # only if you want local model routing"
+    echo "5. Run the autonomous session:"
+    echo "   ./scripts/codex-coding-time.sh"
     echo ""
-    echo "6. Run your first overnight session:"
-    echo "   ./scripts/overnight-codex.sh"
+    echo "6. Serve and inspect the current artifact:"
+    echo "   ./scripts/run-game.sh"
     echo ""
-    echo "7. Morning handoff review:"
-    echo "   claude"
-    echo "   /review"
+    echo "7. Review the output log and artifact state:"
+    echo "   STATUS.md"
     echo ""
     echo -e "${BLUE}Documentation: README.md${NC}"
-    echo -e "${BLUE}Spec template: .claude/specs/_template.md${NC}"
+    echo -e "${BLUE}Spec directory: specs/${NC}"
+    echo -e "${BLUE}Game workspace root: sandbox/${NC}"
     echo ""
 }
 
-# Main
 main() {
     check_prerequisites
-    install_ollama
     install_codex
-    install_claude
-    configure_mcp
-    install_ralph
-    install_litellm
     setup_scripts
     create_env_template
     verify_installation
     print_next_steps
 }
 
-# Run with option to skip steps
 case "${1:-}" in
-    --skip-ollama|--cloud-only)
-        check_prerequisites
-        install_codex
-        install_claude
-        configure_mcp
-        install_ralph
-        setup_scripts
-        create_env_template
-        verify_installation
-        print_next_steps
-        ;;
     --verify-only)
         verify_installation
         ;;
@@ -441,8 +253,6 @@ case "${1:-}" in
         echo ""
         echo "Options:"
         echo "  (none)         Full setup"
-        echo "  --cloud-only   Skip local-model setup (Ollama/Qwen/LiteLLM)"
-        echo "  --skip-ollama  Alias for --cloud-only"
         echo "  --verify-only  Just verify installation"
         echo "  --help         Show this help"
         ;;

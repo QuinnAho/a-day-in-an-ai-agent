@@ -171,6 +171,10 @@ export function queueDirection(state, direction) {
 }
 
 function getResolvedDirection(state) {
+  if (state.moveCount === 0) {
+    return state.currentDirection;
+  }
+
   if (
     state.queuedDirection &&
     !(state.snake.length > 1 && isOppositeDirection(state.currentDirection, state.queuedDirection))
@@ -187,6 +191,8 @@ export function stepState(state, foodOptions) {
   }
 
   const currentDirection = getResolvedDirection(state);
+  const consumedQueuedDirection =
+    state.moveCount > 0 && state.queuedDirection === currentDirection;
   const nextHead = getNextCell(state.snake[0], currentDirection);
 
   if (isOutOfBounds(nextHead, state)) {
@@ -225,7 +231,7 @@ export function stepState(state, foodOptions) {
     snake: nextSnake,
     occupied: buildOccupiedLookup(nextSnake),
     currentDirection,
-    queuedDirection: null,
+    queuedDirection: consumedQueuedDirection ? null : state.queuedDirection,
     moveCount: state.moveCount + 1,
     lastOutcome: isGrowthStep ? 'food' : 'move',
   };

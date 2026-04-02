@@ -1,193 +1,125 @@
-# A Day in an AI Agent
+# AI Game Gen Workflow
 
-*A dual-agent semi-autonomous AI coding pipeline: Codex is dumb sometimes but has a high token limit, Claude is pretty smart but has a low token limit, lets take advantage of both worlds.*
+*A Codex-first autonomous workflow for generating and fixing web games.*
 
-## Welcome to the Factory
+This repository is a game-generation fork of **A Day in an AI Agent**. It adapts the original autonomous coding idea into a **Codex-only workflow** tuned for **browser game development**, not generic product work.
 
-Think of this workflow like a factory running two shifts.
+The active game intake now comes from the guided generator flow in [generate-game.sh](./scripts/generate-game.sh). Each generated game stores its original brief in `sandbox/<game-slug>/idea.txt`, any clarification answers in `sandbox/<game-slug>/clarifications.txt`, and a combined intake source in `sandbox/<game-slug>/intake.md`.
 
-The night shift (Codex, autonomous) works hard, they get a lot done. But it's dark out, they're tired, and they're cheap labor, they're pretty smart but nonetheless mistakes happen. They follow the work orders to the letter, bolt by bolt, but sometimes they won't notice if the blueprint itself was wrong.
+## What This Repo Is For
 
-The day shift (Claude, supervised) comes in each morning and inspects the work. They figure out what got done right, what got botched, and what the night crew should tackle next. They also help you tighten the blueprint before the next run. They're expensive and burn through their hours fast, so you don't want them tightening screws, you want them thinking. Architecture, judgment calls, quality checks.
+- Generating playable web games from specs and prompts
+- Running autonomous Codex implementation loops against those specs
+- Turning broken AI output into a structured fix list
+- Applying engine-level fixes until the game is stable and fun
+- Preserving a clean artifact trail for demos, writeups, and videos
 
-In the evening, you, the manager, use Claude to help turn vague ideas into clear work orders, write up what you want done in `AGENTS.md`, hand them off, and go to bed.
+## Current Target
 
-Optionally, the local crew (Qwen models running on your machine) can handle grunt work for both shifts, fetching parts, carrying materials, so neither shift burns expensive hours on busywork.
+The first target is a **single-file Three.js dungeon crawler**:
 
-If you do not want to use Qwen at all, skip the local crew. The workflow still works with just Codex and Claude.
+- First-person camera
+- Procedurally placed rooms
+- Keys, doors, enemies, health, and pickups
+- Pointer lock controls
+- Minimap and HUD
+- Lighting, collision, and basic combat/avoidance
 
-The workflow is simple: write clear specifications, let autonomous agents handle implementation, then use your judgment to review and guide the work forward.
+This is deliberate. It exercises the parts of AI game generation that usually break:
 
-## Two Ways to Work
+- camera and movement architecture
+- collision and wall penetration
+- enemy navigation
+- level layout consistency
+- UI-to-world synchronization
+- delta time and game loop structure
+- per-frame performance and memory discipline
 
-### Option 1: Interactive (Claude)
-```bash
-claude
-# First: Example: "Create a spec for user authentication"
-# Then: /implement
-```
-Claude creates the spec, then implements it while you watch.
+## How This Version Differs From Upstream
 
-### Option 2: Autonomous (Codex)
-```bash
-# Evening: Queue work (manually or with Claude)
-Open AGENTS.md              # Manual: add tasks yourself
-# OR
-claude                     # Agent: "Break down my specs into detailed tasks for AGENTS.md"
+- Codex owns spec generation, implementation, validation, and workflow iteration.
+- The workflow is focused on **web game generation**, especially Three.js/browser experiments.
+- Success is not just "tests passed." Success means the game runs in a browser and the core systems behave correctly.
+- The iteration model is: **generate -> playtest -> log failures -> queue fixes -> polish -> ship**.
+- The per-game intake lives with the game under `sandbox/<game-slug>/`, not in a repo-wide planning file.
 
-# Night: Let Codex work
-./scripts/overnight-codex.sh
+## Core Workflow
 
-# Morning: Review with Claude
-claude
-/review
-```
-Codex implements overnight while you sleep, Claude reviews in the morning.
+1. Run `./scripts/generate-game.sh` and enter the game name and brief in the guided prompt.
+2. The script saves that brief to `sandbox/<game-slug>/idea.txt`, lets Codex propose a few high-value clarification questions, stores the answers, scaffolds `sandbox/<game-slug>/tests/`, and generates the detailed implementation spec.
+3. The same script seeds [AGENTS.md](./AGENTS.md) with the first starter queue for that game unless you opt out.
+4. Run `./scripts/codex-coding-time.sh`.
+5. Serve the current artifact with `./scripts/run-game.sh` and record what is broken.
+6. Convert those failures into focused follow-up tasks.
+7. Repeat until the prototype becomes a playable, deployable game.
 
-## Setup
+## What "Good" Looks Like
 
-### Start from a Doc
-```bash
-git clone https://github.com/QuinnAho/a-day-in-an-ai-agent.git .ai-workflow
-cd .ai-workflow
-./scripts/setup.sh --cloud-only
-claude
-/setup-workflow docs/example-idea.md
-```
+A successful run should produce:
 
-### Add to Existing Project
-```bash
-# Same setup as above, then:
-claude
-/adopt-workflow docs/architecture.md
-```
+- a rough AI-generated prototype
+- a clear list of failures in the generated output
+- targeted fixes for camera, collisions, loop structure, AI, UI, and performance
+- a polished final game that can be hosted on GitHub Pages
+- a clean enough repo and story arc to support a devlog or YouTube video
 
-## Daily Commands
-
-| When | Command/Prompt | Purpose |
-|------|----------------|---------|
-| Start a feature | "Create a spec for [feature]" | Claude writes spec in `.claude/specs/` |
-| Validate spec | `/analyze-spec <spec>` | Check spec before implementing |
-| Queue for tonight | "Update AGENTS.md with tasks from [spec]" | Add tasks for Codex |
-| Want it now | `/implement <spec>` | Claude does it interactively |
-| Want it overnight | `./scripts/overnight-codex.sh` | Codex works while you sleep |
-| Morning review | `/review` | Check what got built overnight |
-| Need tests | `/test [file]` | Generate comprehensive tests |
-
-## Key Files
+## Important Files
 
 | File | Purpose |
 |------|---------|
-| `CLAUDE.md` | Your project rules - stack, patterns, constraints |
-| `AGENTS.md` | Tonight's task queue for Codex |
-| `STATUS.md` | Morning handoff between agents |
-| `.claude/specs/` | Feature specifications |
+| `AGENTS.md` | Codex task queue and execution rules |
+| `STATUS.md` | Run log and handoff state between autonomous sessions |
+| `PROJECT.md` | Project constitution for the autonomous Codex workflow |
+| `.codex/config.toml` | Project-scoped Codex configuration, including subagent settings |
+| `.codex/agents/` | Codex custom agents that replace the old workflow roles |
+| `.agents/skills/` | Repository-scoped Codex skills for workflow orchestration |
+| `specs/` | Game implementation specs used by the generator and run loop |
+| `sandbox/` | Dedicated workspace where generated games live, one folder per game slug |
+| `sandbox/<game-slug>/idea.txt` | Original game brief collected by the generator and reused by Codex during implementation |
+| `sandbox/<game-slug>/clarifications.txt` | User answers to Codex-generated intake questions |
+| `sandbox/<game-slug>/intake.md` | Combined intake source used during spec generation |
+| `sandbox/<game-slug>/spec-question-run.log` | Clarification-generation CLI log for debugging repeated failures |
+| `sandbox/<game-slug>/spec-generation-run.log` | Spec-generation CLI log for debugging repeated failures |
+| `sandbox/<game-slug>/tests/` | Built-in smoke and logic test files for that specific game workspace |
+| `scripts/codex-cli.mjs` | Repo-local Codex CLI launcher that resolves a working entrypoint, especially on Windows |
+| `scripts/codex-coding-time.sh` | Main autonomous Codex runner |
+| `scripts/generate-game.sh` | Opens a guided intake flow, gathers Codex-generated clarification answers, saves the intake in the sandbox, writes the spec, and seeds the first AGENTS queue |
+| `scripts/run-game.sh` | Serves the current browser artifact locally |
+| `scripts/scaffold-game-tests.mjs` | Scaffolds baseline Node-based tests into each sandboxed game workspace |
+| `scripts/run-game-tests.mjs` | Runs sandbox game tests with Node's built-in test runner |
+| `scripts/quality-gate.sh` | Mechanical quality checks |
 
----
+## Starting Point
 
-<details>
-<summary><b>How It Works (Technical Details)</b></summary>
+If you are working on this branch, start here:
 
-### The Spec-Driven Pipeline
+1. Run `./scripts/generate-game.sh`.
+   The generator walks through a guided prompt, reserves `sandbox/<game-slug>/` for that game's files, stores the original brief there, asks a few Codex-generated clarification questions when useful, and scaffolds baseline tests.
+   It also keeps the intake cheap: clarification questions are capped, simple games should spec in one pass, and repeated tool/path failures cause the spec run to stop.
+2. Review the generated spec and seeded [AGENTS.md](./AGENTS.md) queue.
+3. Run `./scripts/codex-coding-time.sh`.
+4. Serve and inspect the artifact with `./scripts/run-game.sh`.
+5. Review [STATUS.md](./STATUS.md).
+6. Repeat until the game is actually playable, not just technically generated.
 
-Everything starts with specifications. Claude helps you turn vague ideas into concrete specs with testable acceptance criteria. These specs live in `.claude/specs/` and define exactly what success looks like.
+## Direction Of The Repo
 
-```
-Idea → Claude writes spec → You review → Choose path:
-├── Interactive: /implement → Claude builds it now
-└── Autonomous: AGENTS.md → Codex builds overnight → /review
-```
+This repo should be understood as a **game-generation fork** of the original workflow, not a generic two-agent coding template.
 
-### What Each Agent Does
+The near-term objective is to make the automation reliable enough that Codex can:
 
-**Codex (Night Shift)**
-- Reads AGENTS.md for tonight's tasks
-- Follows specs exactly, test-first development
-- Can spawn up to 8 parallel subagents
-- Commits on each passing task
-- Updates STATUS.md with results
-- Runs mechanical quality gates (tests, linting, coverage)
+- generate browser game prototypes
+- iterate on the failures without human micromanagement
+- converge on playable output
+- leave behind a clean record of what the model got wrong and how it was corrected
 
-**Claude (Day Shift)**
-- Interactive implementation via `/implement`
-- Morning review via `/review` with parallel subagents:
-  - security-reviewer
-  - architecture-reviewer
-  - quality-reviewer
-  - simplification-agent
-- Makes judgment calls on ambiguous situations
-- Updates specs and AGENTS.md for next cycle
+## Codex CLI Note
 
-### Quality Gates
+The workflow still uses the Codex CLI directly. Repository scripts call it through `scripts/codex-cli.mjs`, which is a thin launcher that resolves a working Codex entrypoint when a Windows global shim such as `codex.bat` is broken.
 
-**Mechanical (Codex)**
-- Tests pass
-- Linter clean
-- Coverage met
-- No secrets
+Current script defaults:
 
-**Judgment (Claude)**
-- Architecture sound
-- No spec drift
-- Security reviewed
-- Solves RIGHT problem
+- `CODEX_SPEC_MODEL=gpt-5.4`
+- `CODEX_RUN_MODEL=gpt-5.4`
 
-### The Daily Rhythm
-
-```
-Evening: You + Claude
-├── Review STATUS.md from last night
-├── Update specs based on learnings
-├── Write tonight's AGENTS.md tasks
-└── Each task links to a spec file
-
-Night: Codex (autonomous)
-├── codex exec loop reads AGENTS.md
-├── Process tasks sequentially
-├── Write failing tests first
-├── Implement until tests pass
-├── Commit if all gates pass
-└── Update STATUS.md
-
-Morning: Claude + You
-├── Read STATUS.md handoff
-├── /review launches parallel subagents
-├── Identify issues and make decisions
-├── Complex debugging if needed
-└── Update AGENTS.md for tonight
-```
-
-</details>
-
-<details>
-<summary><b>Scripts & Setup Details</b></summary>
-
-### Scripts
-- `./scripts/setup.sh` - Install dependencies
-- `./scripts/overnight-codex.sh` - Run autonomous loop
-- `./scripts/copy-workflow.ps1` - Windows file copy
-- `./scripts/copy-workflow.sh` - Unix file copy
-
-### Slash Commands
-- `/setup-workflow [doc]` - Initial setup
-- `/adopt-workflow [path]` - Integrate into existing project
-- `/analyze-spec <spec>` - Validate specifications
-- `/implement <spec>` - Interactive implementation
-- `/review` - Morning review of overnight work
-- `/test [file]` - Generate tests
-- `/validate <spec>` - Verify against spec
-
-### Quick Prompts
-```text
-# Turn doc into specs:
-Read docs/idea.md. Create CLAUDE.md, 2-3 specs in .claude/specs/, and initial AGENTS.md tasks.
-
-# Queue tonight's work:
-Read .claude/specs/<name>.md. Update AGENTS.md with next 1-3 thin tasks.
-```
-
-</details>
-
-**Full documentation:**
-- [AI Workflow Architecture](docs/AI_WORKFLOW_ARCHITECTURE.md) - Deep dive into the dual-agent architecture
-- [Workflow Guide](docs/workflow-guide.md) - Detailed setup and usage
+You can override either environment variable if your Codex account exposes a different supported model name.

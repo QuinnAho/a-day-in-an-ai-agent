@@ -87,6 +87,24 @@ test('queueDirection rejects immediate opposite turns', () => {
   assert.equal(rejectedRunningState.currentDirection, 'east');
 });
 
+test('the opening move honors the first ready-state direction before applying a queued turn', () => {
+  let state = createInitialState();
+  state = queueDirection(state, 'north');
+  state = queueDirection(state, 'west');
+
+  state = stepState(state);
+
+  assert.equal(state.currentDirection, 'north');
+  assert.equal(state.queuedDirection, 'west');
+  assert.deepEqual(state.snake[0], { x: 10, y: 9 });
+
+  state = stepState(state);
+
+  assert.equal(state.currentDirection, 'west');
+  assert.equal(state.queuedDirection, null);
+  assert.deepEqual(state.snake[0], { x: 9, y: 9 });
+});
+
 test('queueDirection buffers only one turn and stepState applies it on the next tick', () => {
   let state = makeState({
     snake: [
@@ -95,6 +113,7 @@ test('queueDirection buffers only one turn and stepState applies it on the next 
       { x: 8, y: 10 },
     ],
     currentDirection: 'east',
+    moveCount: 1,
   });
   state = queueDirection(state, 'north');
   state = queueDirection(state, 'south');
@@ -105,7 +124,7 @@ test('queueDirection buffers only one turn and stepState applies it on the next 
   state = stepState(state);
 
   assert.equal(state.currentDirection, 'north');
-  assert.equal(state.moveCount, 1);
+  assert.equal(state.moveCount, 2);
   assert.equal(state.queuedDirection, null);
   assert.deepEqual(state.snake[0], { x: 10, y: 9 });
 });

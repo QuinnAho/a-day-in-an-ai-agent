@@ -6,9 +6,9 @@
 
 ## Last Updated
 <!-- Codex updates this automatically -->
-- **Timestamp**: 2026-04-02 19:37:46
+- **Timestamp**: 2026-04-02 19:45:35
 - **Session ID**: 20260402_192345
-- **Total runtime**: ~14 minutes
+- **Total runtime**: ~22 minutes
 
 ---
 
@@ -19,7 +19,7 @@
 
 | Task | Commit | Tests | Notes |
 |------|--------|-------|-------|
-| Generate the first playable snake game prototype | pending | `node ./scripts/run-game-tests.mjs` | Added a modular playable artifact at `sandbox/snake-game/index.html` with deterministic snake rules, HUD/overlay state, and a reusable sandbox test harness |
+| Generate the first playable snake game prototype | not committed | `node ./scripts/run-game-tests.mjs` | Added a modular playable artifact at `sandbox/snake-game/index.html` with deterministic snake rules, HUD/overlay state, reusable sandbox tests, and a reviewed fix for the opening ready-state turn queue |
 
 ### Tasks Blocked
 <!-- Tasks that couldn't be completed -->
@@ -69,10 +69,14 @@
 - `bash ./scripts/quality-gate.sh` could not run in this environment because Git Bash exits immediately with `couldn't create signal pipe, Win32 error 5`.
 - Equivalent manual checks completed:
   - `node ./scripts/run-game-tests.mjs` passed
-  - `node --check sandbox/snake-game/main.js` passed
   - `python -m http.server` served `sandbox/snake-game/` and returned HTTP `200` for `index.html`
   - `rg` found no debug-code or secret-pattern matches under `sandbox/snake-game/`
-- Self-review pass: the active toolset could not invoke the project `code_reviewer` and `spec_validator` agents directly, so the review was performed manually against `.codex/agents/code-reviewer.toml` and `.codex/agents/spec-validator.toml`. No blocking mismatches were found. Residual risk is limited to browser-visible play feel because no automated browser interaction is available in-session.
+- Self-review pass:
+  - `code_reviewer` found one material issue: the first buffered turn could override the opening ready-state move before the snake advanced
+  - The simulation was updated so the first valid ready-state direction is always the opening move, and a regression test now covers that sequence
+  - A final `code_reviewer` pass found no remaining material issues
+  - `spec_validator` found no material spec mismatches after the fix
+  - Residual risk is limited to browser-visible play feel because no automated browser interaction is available in-session
 
 ---
 
@@ -131,3 +135,5 @@ git log --oneline --since="12 hours ago"
 [2026-04-02 19:23:50] Session 20260402_192345 started
 
 [2026-04-02 19:35] First playable snake prototype created at sandbox/snake-game/index.html; sandbox tests passed; manual browser playtest queued next
+[2026-04-02 19:42] Self-review found and fixed the ready-state opening turn queue bug; regression tests passed again
+[2026-04-02 19:45] Final code review and spec validation reported no remaining material issues; playtest remains the next task
