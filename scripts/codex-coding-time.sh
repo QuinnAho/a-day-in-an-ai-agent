@@ -84,6 +84,16 @@ get_task_spec() {
     sed -n "$((line_num+1)),$((line_num+5))p" AGENTS.md | grep -oP 'specs/[^`\s]+' | head -1
 }
 
+get_task_slug() {
+    local task_spec=$1
+
+    if [ -z "$task_spec" ]; then
+        return 1
+    fi
+
+    basename "$task_spec" .md
+}
+
 get_task_brief() {
     local task_spec=$1
 
@@ -219,13 +229,19 @@ update_status() {
 # Commit changes for a completed task
 commit_task() {
     local task_desc=$1
+    local game_slug=$2
 
     git add -A
     if git diff --cached --quiet; then
         log "${YELLOW}No changes to commit${NC}"
         echo "no-changes"
     else
-        local commit_msg="feat: $task_desc
+        local commit_prefix="workflow"
+        if [ -n "$game_slug" ]; then
+            commit_prefix="$game_slug"
+        fi
+
+        local commit_msg="$commit_prefix: $task_desc
 
 Implemented by Codex overnight session $SESSION_ID
 
@@ -266,6 +282,7 @@ main() {
 
         local task_desc=$(get_task_description "$task_line")
         local task_spec=$(get_task_spec "$task_line")
+        local task_slug=$(get_task_slug "$task_spec" || true)
         local task_brief=$(get_task_brief "$task_spec" || true)
 
         log "Found task: $task_desc"
@@ -282,7 +299,7 @@ main() {
             0)  # Success
                 # Run quality gates
                 if run_quality_gates; then
-                    local commit_hash=$(commit_task "$task_desc")
+                    local commit_hash=$(commit_task "$task_desc" "$task_slug")
                     mark_task_complete "$task_line"
                     update_status "$task_desc" "completed" "$commit_hash" "Automated implementation"
                     ((tasks_completed++))

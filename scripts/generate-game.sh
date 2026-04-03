@@ -129,6 +129,7 @@ refresh_paths() {
     GAME_DIR_REL="sandbox/${SLUG}"
     GAME_DIR="$PROJECT_ROOT/$GAME_DIR_REL"
     TARGET_ARTIFACT_REL="$GAME_DIR_REL/index.html"
+    BASELINE_REF_PATH="$GAME_DIR/baseline-ref.txt"
     IDEA_RECORD_PATH="$GAME_DIR/idea.txt"
     CLARIFICATION_QUESTIONS_PATH="$GAME_DIR/clarification-questions.txt"
     CLARIFICATIONS_PATH="$GAME_DIR/clarifications.txt"
@@ -344,6 +345,23 @@ $(cat "$CLARIFICATIONS_PATH")
 EOF
 }
 
+record_baseline_ref() {
+    local baseline_commit=""
+    local baseline_branch=""
+
+    if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        baseline_commit="$(git rev-parse HEAD 2>/dev/null || true)"
+        baseline_branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+    fi
+
+    cat > "$BASELINE_REF_PATH" <<EOF
+game_slug=$SLUG
+captured_at=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+baseline_commit=${baseline_commit:-unknown}
+baseline_branch=${baseline_branch:-unknown}
+EOF
+}
+
 seed_agents_queue() {
     local queue_file
     local temp_agents
@@ -526,6 +544,7 @@ fi
 
 node "$PROJECT_ROOT/scripts/scaffold-game-tests.mjs" "$GAME_DIR_REL"
 
+record_baseline_ref
 printf '%s\n' "$IDEA_TEXT" > "$IDEA_RECORD_PATH"
 collect_clarifications
 write_intake_file
