@@ -1,4 +1,4 @@
-# AI Game Gen Workflow
+# AI Game Gen Workflow Experiment
 
 **Generate playable browser games from a single prompt using an autonomous AI workflow.**
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AI Game Gen Workflow - Setup Script
+# AI Game Gen Workflow Experiment - Setup Script
 # Sets up the Codex-first autonomous web-game workflow.
 
 set -e
@@ -18,7 +18,7 @@ NC='\033[0m'
 
 echo -e "${BOLD}"
 echo "============================================================"
-echo "           AI Game Gen Workflow - Setup Script"
+echo "           AI Game Gen Workflow Experiment - Setup Script"
 echo "        Codex-First Autonomous Web Game Workflow"
 echo "============================================================"
 echo -e "${NC}"
@@ -133,7 +133,7 @@ create_env_template() {
 
     if [ ! -f ".env.example" ]; then
         cat > .env.example << 'EOF'
-# AI Game Gen Workflow - Environment Variables
+# AI Game Gen Workflow Experiment - Environment Variables
 
 # Optional GitHub token for publishing or repo automation
 GITHUB_TOKEN=your_github_personal_access_token
