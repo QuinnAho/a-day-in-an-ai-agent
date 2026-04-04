@@ -2,7 +2,7 @@
 
 **Generate playable browser games from a single prompt using an autonomous AI workflow.**
 
-This project demonstrates a structured AI workflow that takes a game idea and autonomously generates, tests, and fixes a working browser game — no manual coding required.
+This project demonstrates a structured AI workflow that takes a game idea and autonomously generates, tests, and fixes a working browser game, no manual coding required.
 
 ## See It In Action
 
@@ -14,27 +14,18 @@ The demo shows two dungeon games generated from the exact same prompt:
 
 Same input. Different results. See what a good workflow can do.
 
-## The Idea
+## The Experiment
 
-Most AI-generated games break. Camera gets stuck. Enemies walk through walls. The game loop stutters. UI doesn't sync with game state.
+I was curious whether my [A Day in an AI Agent](https://github.com/anthropics/a-day-in-an-ai-agent) workflow could be adapted for game generation. Games are harder than typical code, camera systems, collision detection, enemy AI, and game loops all need to work together coherently. Most AI-generated games break in predictable ways.
 
-This workflow treats those failures as expected. It:
+This experiment tests whether a structured workflow can help. The approach:
 
-1. **Generates** a rough prototype from your prompt
-2. **Playtests** and logs what's broken
-3. **Queues targeted fixes** for each failure
-4. **Iterates** until the game actually works
-5. **Ships** a polished, deployable result
+1. **Generate** a rough prototype from a prompt
+2. **Playtest** and log what's broken
+3. **Queue targeted fixes** for each failure
+4. **Iterate** until the game actually works
 
-The AI does the implementation. The workflow keeps it on track.
-
-## Why This Matters
-
-AI can write code. But writing code that *works together* as a coherent game is harder. This project shows one way to bridge that gap — by giving the AI a structured process instead of just a blank canvas.
-
-## Origin
-
-This is a game-generation fork of [A Day in an AI Agent](https://github.com/anthropics/a-day-in-an-ai-agent). It adapts that autonomous coding workflow specifically for browser game development.
+It's not a polished product — just an exploration of what's possible when you give AI a process instead of a blank canvas.
 
 ---
 
